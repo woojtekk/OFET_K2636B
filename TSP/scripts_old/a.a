@@ -1,0 +1,33 @@
+smua.reset()
+smua.source.rangev = 5
+smua.source.rangei = 1
+smua.source.levelv = 0
+smua.measure.rangev = 5
+smua.measure.rangei = 1
+smua.measure.nplc = 0.01
+smua.measure.autozero = smua.AUTOZERO_ONCE
+smua.nvbuffer1.clear()
+smua.nvbuffer1.appendmode = 1
+smua.source.output = smua.OUTPUT_ON
+smub.reset()
+smub.source.func = smub.OUTPUT_DCAMPS
+smub.source.rangei = 1
+smub.source.rangev = 5
+smub.source.leveli = 0
+smub.measure.rangei = 1
+smub.measure.rangev = 5
+smub.measure.nplc = 0.01
+smub.measure.autozero = smub.AUTOZERO_ONCE
+smub.nvbuffer1.clear()
+smub.nvbuffer1.appendmode = 1
+smub.source.output = smub.OUTPUT_ON
+f1, msg1 = ConfigPulseVMeasureI(smua, 0, 5, 1,
+0.002, 0.2, 10, smua.nvbuffer1, 1)
+f2, msg2 = ConfigPulseIMeasureV(smub, 0,-1, 5,
+0.001, 0.2, 10, smub.nvbuffer1, 2)
+if (f1 == true) and (f2 == true) then
+f3, msg3 = InitiatePulseTestDual(1, 2)
+print("Initiate message:", msg3)
+else
+print("Config errors:", msg1, msg2)
+end
