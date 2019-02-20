@@ -16,12 +16,14 @@ class k2636b():
     FIG = True
     TAGS_Header = ">>head<<"
     TAGS_END    = ">>END<<"
+    EMERGENCY_STOP=0
 
     def __init__(self):
+        signal.signal(signal.SIGALRM, self.handler)
+        signal.signal(signal.SIGINT,  self.handler)
+
         DEV_ADDRESS = "ASRL/dev/tty_USB_K2636B::INSTR"
         DEV_BAUDRATE = 115200
-        signal.signal(signal.SIGALRM, self.handler)
-        signal.signal(signal.SIGINT, self.handler)
         rm = visa.ResourceManager('@py')
 
         self.Connect(rm, DEV_ADDRESS, "\n", DEV_BAUDRATE)
@@ -33,10 +35,9 @@ class k2636b():
         print ("========== Forever is over! ============")
         print ("========================================")
         print ("=============== ABORT! =================")
-        print ("========================================")
-
-        self.kwrite('ABORT')
-        sel
+        print ("========================================",self.EMERGENCY_STOP)
+        self.EMERGENCY_STOP+=1
+        #self.kwrite('ABORT')
 
     def Connect(self, rm, address, read_term, baudrate):
         """ polacz z urzadzeniem """
@@ -45,9 +46,6 @@ class k2636b():
             self.inst.read_termination = str(read_term)
             self.inst.baud_rate = baudrate
             self.inst.timeout = 50000
-
-            #while self.inst.read() :
-            #    print("--")
 
         except serial.SerialException:
             print('Cannot open Device Port.')
@@ -98,6 +96,7 @@ class k2636b():
             raise SystemExit
 
     def runTSP(self, fn="test"):
+        """ process al incoming data form K2636B   """
         try:
             self.kwrite('script.anonymous.run()')
             print(fn)
@@ -113,12 +112,12 @@ class k2636b():
             while True:
                 txt = self.kread()
                 self.DataSave(fn, txt)
-                if self.TAGS_END in txt:
-                    break
 
+                if self.TAGS_END in txt: break
+                if self.EMERGENCY_STOP !=0 : break
                 if self.TAGS_Header in txt:
                     dd = pd.DataFrame(a)
-                    df=pd.concat([df,dd],axis=1, sort=False)
+                    df = pd.concat([df,dd],axis=1, sort=False)
                     a.clear()
 
                 txt = txt.replace(self.TAGS_Header, "")
@@ -127,58 +126,17 @@ class k2636b():
             dd = pd.DataFrame(a)
             df = pd.concat([df, dd], axis=1, sort=False)
 
-            print(df)
-
-
-            # df[a[0]]=[a[n+1] for n in range(len(a)-1)]
-            # print(df)
-            # # print(list(df.columns.values))
-            # self.DataSave(fn, df)
-
-            # df = pd.DataFrame()
-            # data = pd.DataFrame()
-            # self.first=0
-
-            # while True:
-            #     txt = self.kread()
-            #     self.DataSave(fn, txt)
-            #     if self.TAGS_END    in txt: break
-            #
-            #     if self.TAGS_Header in txt:
-            #         if self.first != 0:
-            #             data.join(df)
-            #             print("::--::",data)
-            #             df.drop(df.index, inplace=True)
-            #
-            #         head = txt.replace(self.TAGS_Header,"")
-            #         for x in range(len(head.split())):
-            #             self.col = pd.DataFrame(columns=[str(head.split()[x]).strip()])
-            #             df  = df.append(self.col,sort=False)
-            #             self.col.drop(self.col.index, inplace=True)
-            #
-            #         print("za kazdym razem",df.columns.values)
-            #         self.first=1
-            #         continue
-            #     df.loc[len(df.index)+1] = [txt.split()[n] for n in range(len(head.split()))]
-            #
-            #     if self.FIG:
-            #         plt.scatter(float(txt.split()[0]),float(txt.split()[1]))
-            #         plt.autoscale(enable=True, axis='both', tight=None)
-            #         plt.pause(0.0001)
-            # self.data=0
-
-            #self.DataSave(fn,df)
-#            print(data)
+            self.DataSave(fn,df)
 
         except AttributeError:
             print('ERROR: some error in runTSP function')
             raise SystemExit
 
     def DataSave(self,fn,data):
+        """  Save RAW data and dataframe data to another file"""
         if isinstance(data, pd.DataFrame):
-            data.to_csv(fn, sep=' ', encoding='utf-8', index=False)
+            data.to_csv(fn, sep=' ', encoding='utf-8', index=False,header=None)
         else:
-            #print(data)
             with open(str(fn+"_raw.txt"), 'a') as the_file:
                 the_file.write(str(data) + "\n")
 
@@ -234,6 +192,7 @@ class k2636b():
 
             self.loadTSP('k2636b_transfer_sweep.tsp', cmd)
             self.runTSP(file_name)
+            self.stats(file_name)
 
             finish_time = time.time()
             print('Transfer curves complete. [%.2f] sec.' % ((finish_time - begin_time)))
@@ -272,6 +231,7 @@ class k2636b():
             file_name = self.check_file_name(file_name)
 
             self.runTSP(file_name)
+            self.stats(file_name)
 
             finish_time = time.time()
             print('Output sweeps complete. [%.2f] sec.' % ((finish_time - begin_time)))
@@ -300,6 +260,7 @@ class k2636b():
             file_name = self.check_file_name(file_name)
 
             self.runTSP("IV-SWEEP  \t", file_name)
+            self.stats(file_name)
 
             data = self.readBuferOutput()
             self.save_data(file_name, data)
