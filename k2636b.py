@@ -54,6 +54,7 @@ class k2636b():
     def CloseConnect(self):
         """Close connection to keithley."""
         try:
+            # self.inst.clear()
             self.inst.close()
         except(NameError):
             print('CONNECTION ERROR: No connection established....')
@@ -111,6 +112,7 @@ class k2636b():
             df=pd.DataFrame()
             while True:
                 txt = self.kread()
+                print(txt)
                 self.DataSave(fn, txt)
 
                 if self.TAGS_END in txt: break
@@ -297,14 +299,6 @@ class k2636b():
         except(AttributeError):
             print('Cannot perform time sweep: some errors')
 
-    def test(self):
-        #self.loadTSP('RESET.tsp', "")
-
-        x=123
-        print("1",x)
-        print("1","2",x)
-        print("1","2","3",x)
-
 if __name__ == '__main__':
 
     btime = time.time()
@@ -312,8 +306,6 @@ if __name__ == '__main__':
 
     kk = k2636b()
     kk.test()
-
-
 
     print(    "...::: KONIEC :::... [%.2f]" % (time.time() - btime))
     kk.CloseConnect()
