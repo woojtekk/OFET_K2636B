@@ -5,7 +5,8 @@
 -------------------------------
 
 function f_transfer(vds,start,stop,step)
-    print(">>head<< VGS IDS IGS VDS")
+
+    print(">>head<<VGS("..start..") IDS("..start..") IGS("..start..") VDS("..start..")")
 
 	smua.source.levelv = vds
 	smub.source.levelv = start

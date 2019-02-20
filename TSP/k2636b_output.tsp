@@ -9,7 +9,9 @@ function f_output(VdsStart,VdsEnd,VdsStep,VgsStart,VgsEnd,VgsStep)
 
     Vg=VgsStart
     while true do
-        print(">>head<< VDS ",Vg," IDS IGS")
+        txt="VDS(" .. Vg .. ") VGS(" .. Vg .. ") IDS(" .. Vg ..") IGS(" .. Vg .. ")"
+
+        print(">>head<<" .. txt)
         smub.source.levelv = Vg
 
         Vd=VdsStart
@@ -17,7 +19,7 @@ function f_output(VdsStart,VdsEnd,VdsStep,VgsStart,VgsEnd,VgsStep)
             smua.source.levelv = Vd
             delay(0.05)
 
-            --print(Vd,smua.measure.i(),smub.measure.i(),Vg)
+            print(Vd, smua.measure.i(), smub.measure.i(), Vg)
 
             Vd=Vd+VdsStep
 
@@ -43,7 +45,7 @@ reset()
 --display.clear()
 --display.settext("OUTPUT SWEEP")
 
-beeper.beep(1, 600)
+--beeper.beep(1, 600)
 
 -- PARAMETERS
 LIMIT_I = 1

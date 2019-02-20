@@ -23,6 +23,7 @@ class k2636b():
         signal.signal(signal.SIGALRM, self.handler)
         signal.signal(signal.SIGINT, self.handler)
         rm = visa.ResourceManager('@py')
+
         self.Connect(rm, DEV_ADDRESS, "\n", DEV_BAUDRATE)
 
 
@@ -44,6 +45,10 @@ class k2636b():
             self.inst.read_termination = str(read_term)
             self.inst.baud_rate = baudrate
             self.inst.timeout = 50000
+
+            #while self.inst.read() :
+            #    print("--")
+
         except serial.SerialException:
             print('Cannot open Device Port.')
             return 0
@@ -103,27 +108,67 @@ class k2636b():
                 plt.ylabel("IDS [A] / IGS [A]")
                 plt.title(os.path.basename(fn))
 
-            df = pd.DataFrame()
+            a=[]
+            df=pd.DataFrame()
             while True:
                 txt = self.kread()
                 self.DataSave(fn, txt)
-                if self.TAGS_END    in txt: break
+                if self.TAGS_END in txt:
+                    break
 
                 if self.TAGS_Header in txt:
-                    head = txt.replace(self.TAGS_Header,"")
-                    print(head)
-                    for x in range(len(head.split())):
-                        col = pd.DataFrame(columns=[str(head.split()[x]).strip()])
-                        df  = df.append(col,sort=False)
-                    continue
-                df.loc[len(df.index)+1] = [txt.split()[n] for n in range(len(head.split()))]
+                    dd = pd.DataFrame(a)
+                    df=pd.concat([df,dd],axis=1, sort=False)
+                    a.clear()
 
-                if self.FIG:
-                    plt.scatter(float(txt.split()[0]),float(txt.split()[1]))
-                    plt.autoscale(enable=True, axis='both', tight=None)
-                    plt.pause(0.0001)
+                txt = txt.replace(self.TAGS_Header, "")
+                a.append(txt.split())
 
-            self.DataSave(fn,df)
+            dd = pd.DataFrame(a)
+            df = pd.concat([df, dd], axis=1, sort=False)
+
+            print(df)
+
+
+            # df[a[0]]=[a[n+1] for n in range(len(a)-1)]
+            # print(df)
+            # # print(list(df.columns.values))
+            # self.DataSave(fn, df)
+
+            # df = pd.DataFrame()
+            # data = pd.DataFrame()
+            # self.first=0
+
+            # while True:
+            #     txt = self.kread()
+            #     self.DataSave(fn, txt)
+            #     if self.TAGS_END    in txt: break
+            #
+            #     if self.TAGS_Header in txt:
+            #         if self.first != 0:
+            #             data.join(df)
+            #             print("::--::",data)
+            #             df.drop(df.index, inplace=True)
+            #
+            #         head = txt.replace(self.TAGS_Header,"")
+            #         for x in range(len(head.split())):
+            #             self.col = pd.DataFrame(columns=[str(head.split()[x]).strip()])
+            #             df  = df.append(self.col,sort=False)
+            #             self.col.drop(self.col.index, inplace=True)
+            #
+            #         print("za kazdym razem",df.columns.values)
+            #         self.first=1
+            #         continue
+            #     df.loc[len(df.index)+1] = [txt.split()[n] for n in range(len(head.split()))]
+            #
+            #     if self.FIG:
+            #         plt.scatter(float(txt.split()[0]),float(txt.split()[1]))
+            #         plt.autoscale(enable=True, axis='both', tight=None)
+            #         plt.pause(0.0001)
+            # self.data=0
+
+            #self.DataSave(fn,df)
+#            print(data)
 
         except AttributeError:
             print('ERROR: some error in runTSP function')
