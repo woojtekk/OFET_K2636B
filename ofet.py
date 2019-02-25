@@ -3,6 +3,8 @@
 
 import k2636b_help
 from k2636b import k2636b
+import usb
+import sys
 
 FILE_NAME = "TR_TEST"
 # DEV_ADDRESS = 'ASRL/dev/ttyUSB0'
@@ -15,7 +17,12 @@ DEV_ADDRESS = 'ASRL/dev/ttyUSB0::INSTR'
 if __name__ == '__main__':
     args = k2636b_help.help()
 
-    keithley = k2636b()
+    try:
+        keithley = k2636b()
+    except usb.core.USBError:
+        print("some errors")
+        sys.exit()
+
 
     if args.bar: k2636b.BAR = True
     if args.fig: k2636b.FIG = False

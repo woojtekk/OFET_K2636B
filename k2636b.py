@@ -11,7 +11,7 @@ import serial
 from serial import Serial
 import pandas as pd
 import matplotlib.pyplot as plt
-import math
+import usbtmc
 
 class k2636b():
     data_path = str(os.path.dirname(os.path.realpath(__file__)) + "/data/")
@@ -19,17 +19,6 @@ class k2636b():
     TAGS_Header = ">>head<<"
     TAGS_END    = ">>END<<"
     EMERGENCY_STOP=0
-
-    def __init__(self):
-        signal.signal(signal.SIGALRM, self.handler)
-        signal.signal(signal.SIGINT,  self.handler)
-
-        DEV_ADDRESS = "ASRL/dev/tty_USB_K2636B::INSTR"
-        DEV_BAUDRATE = 115200
-        rm = visa.ResourceManager('@py')
-
-        self.Connect(rm, DEV_ADDRESS, "\n", DEV_BAUDRATE)
-
 
     def handler(self, signum, frame):
         print ("\n")
@@ -41,8 +30,32 @@ class k2636b():
         self.EMERGENCY_STOP+=1
         #self.kwrite('ABORT')
 
-    def Connect(self, rm, address, read_term, baudrate):
+
+    def __init__(self):
+        signal.signal(signal.SIGALRM, self.handler)
+        signal.signal(signal.SIGINT,  self.handler)
+        # self.Connect1()
+        self.Connect2()
+
+    def abort(self):
+        print(self.inst.read_stb())
+
+    def Connect2(self):
+        self.inst=usbtmc.Instrument(0x05e6,0x2636)
+        self.inst.write("*CLS")
+        #print(self.inst.ask("*IDN?"))
+        return 0
+
+    def Connect1(self):
         """ polacz z urzadzeniem """
+
+        address   = "ASRL/dev/tty_USB_K2636B::INSTR"
+        baudrate  = 115200
+        read_term = "\n"
+
+        rm = visa.ResourceManager('@py')
+        self.Connect(rm, DEV_ADDRESS, "\n", DEV_BAUDRATE)
+
         try:
             self.inst = rm.open_resource(address)
             self.inst.read_termination = str(read_term)
@@ -325,7 +338,8 @@ if __name__ == '__main__':
     os.system('clear')
 
     kk = k2636b()
-    kk.test()
+    kk.abort()
+
 
     print(    "...::: KONIEC :::... [%.2f]" % (time.time() - btime))
     kk.CloseConnect()
