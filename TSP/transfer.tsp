@@ -1,46 +1,24 @@
 ----------------
 -- TSP PROGRAM FOR PERFORMING TRANSFER SWEEPS
 -- Sweeps over gate voltage and measures channel current
+
 -- INPUT sweep start and end points with ABSOLUTE step size
 
-function f_transfer(vds,start,stop,step)
-	if start <= stop then
-		step = math.abs(step)
-	else
-		step = -1*math.abs(step)
-	end
 
-	Vg=start
-	while true do
-		smub.source.levelv = Vg
-		print(Vg, smua.measure.i(smua.nvbuffer1),smub.measure.i(smub.nvbuffer1))
-		delay(0.25)
+-------- PARAMETERS --------
+Vchan = -50
 
-		Vg=Vg+step	 
-		if math.abs(stop-Vg+step) <= 0 then
-			break
-		end
-	end
-end
+VgStart = 100
+VgEnd = -100
+VgStep = 1
 
 
 -------- MAIN PROGRAM --------
 reset()
 display.clear()
-print("zaczynamy")
-
--------- PARAMETERS --------
--- Vchan	= -20
--- Vds	 = 10
--- VgsStart = 0
--- VgsEnd	 = 10
--- VgsStep	 = 0.5
--- SWEEP	 = true
--- NPLC	 = 0.1
--- DELATE	 = 1
 
 -- Beep in excitement
--- beeper.beep(1, 600)
+beeper.beep(1, 600)
 
 -- Clear buffers
 smua.nvbuffer1.clear()
@@ -55,19 +33,17 @@ smua.measure.count = 1
 smub.measure.count = 1
 
 -- SMUA setup
-smua.measure.delay = smua.DELAY_AUTO
-smua.measure.delayfactor = DELATE
-smua.measure.nplc = NPLC
+smua.measure.delayfactor = 1.0
+smua.measure.nplc = 10
 smua.source.func = smua.OUTPUT_DCVOLTS
 smua.sense = smua.SENSE_LOCAL
 smua.source.autorangev = smua.AUTORANGE_ON
-smub.source.limiti = 10e-5
+smua.source.limiti = 10e-5
 smua.measure.rangei = 10e-5
 
 -- SMUB setup
-smub.measure.delay = smub.DELAY_AUTO
-smub.measure.delayfactor = DELATE
-smub.measure.nplc = NPLC
+smub.measure.delayfactor = 1.0
+smub.measure.nplc = 10
 smub.source.func = smub.OUTPUT_DCVOLTS
 smub.source.limiti = 10e-8
 
@@ -78,22 +54,48 @@ display.screen = display.SMUA_SMUB
 
 -- MEASUREMENT ROUTINE
 
-smua.source.levelv = Vds
+smua.source.levelv = Vchan
 smua.source.output = smua.OUTPUT_ON
-smub.source.levelv = VgsStart
+
+Vg = VgStart
+smub.source.levelv = Vg
 smub.source.output = smub.OUTPUT_ON
-delay(1)
+delay(3)
 
+-- Forward Vg scan
+if VgStart < VgEnd then
+    while Vg <= VgEnd do
+        smub.source.levelv = Vg
+        smub.source.output = smub.OUTPUT_ON
+        delay(0.2)
+        print(Vg, smua.measure.i(),smub.measure.i(),Vchan)
 
-f_transfer((Vds),(VgsStart), (VgsEnd), (VgsStep))
-if SWEEP  then
-f_transfer((Vds),(VgsEnd), (VgsStart), (VgsStep))
+        smub.source.output = smub.OUTPUT_OFF
+        Vg = Vg + VgStep
+    end
+
+-- Reverse scan
+elseif VgStart > VgEnd then
+    while Vg >= VgEnd do
+        smub.source.levelv = Vg
+        smub.source.output = smub.OUTPUT_ON
+        delay(0.2)
+        print(Vg, smua.measure.i(),smub.measure.i(),Vchan)
+
+        smub.source.output = smub.OUTPUT_OFF
+        Vg = Vg - VgStep
+    end
+
+else
+    error("Invalid sweep parameters.")
 end
 
 smua.source.output = smua.OUTPUT_OFF
 smub.source.output = smub.OUTPUT_OFF
 waitcomplete()
+
+beeper.beep(1, 600)
+beeper.beep(1, 600)
+beeper.beep(1, 600)
+beeper.beep(1, 600)
 -------- END --------
-
--------------------------------
-

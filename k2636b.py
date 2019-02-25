@@ -28,40 +28,41 @@ class k2636b():
         print ("=============== ABORT! =================")
         print ("========================================",self.EMERGENCY_STOP)
         self.EMERGENCY_STOP+=1
-        #self.kwrite('ABORT')
-
 
     def __init__(self):
         signal.signal(signal.SIGALRM, self.handler)
         signal.signal(signal.SIGINT,  self.handler)
+        """ connect1 if you are using rs232   """
         # self.Connect1()
+
+        """ connect2 if you are using usb connection via usbtcm   """
         self.Connect2()
 
-    def abort(self):
-        print(self.inst.read_stb())
+    def info(self):
+        print(self.inst.ask("*IDN?"))
+        print("STB:",self.inst.ask("*STB?"))
+        print("SRE:",self.inst.ask("*SRE?"))
+        print("ESE:",self.inst.ask("*ESE?"))
+        print("ESR:",self.inst.ask("*ESR?"))
+        print("OPC:",self.inst.ask("*OPC?"))
 
     def Connect2(self):
         self.inst=usbtmc.Instrument(0x05e6,0x2636)
         self.inst.write("*CLS")
-        #print(self.inst.ask("*IDN?"))
         return 0
 
     def Connect1(self):
         """ polacz z urzadzeniem """
-
         address   = "ASRL/dev/tty_USB_K2636B::INSTR"
         baudrate  = 115200
         read_term = "\n"
-
         rm = visa.ResourceManager('@py')
         self.Connect(rm, DEV_ADDRESS, "\n", DEV_BAUDRATE)
-
         try:
             self.inst = rm.open_resource(address)
             self.inst.read_termination = str(read_term)
             self.inst.baud_rate = baudrate
             self.inst.timeout = 50000
-
         except serial.SerialException:
             print('Cannot open Device Port.')
             sys.exit()
@@ -266,7 +267,7 @@ class k2636b():
             file_name = self.check_file_name(file_name)
 
             self.runTSP(file_name)
-            self.stats(file_name)
+
 
             finish_time = time.time()
             print('Output sweeps complete. [%.2f] sec.' % ((finish_time - begin_time)))
@@ -338,7 +339,7 @@ if __name__ == '__main__':
     os.system('clear')
 
     kk = k2636b()
-    kk.abort()
+    kk.info()
 
 
     print(    "...::: KONIEC :::... [%.2f]" % (time.time() - btime))
