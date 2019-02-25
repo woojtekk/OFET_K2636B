@@ -11,7 +11,7 @@ function f_time(vds, vgs, tstep, tlong)
 	timer.reset()
 	smua.source.output = smua.OUTPUT_ON
 	smub.source.output = smub.OUTPUT_ON
-	delay(0.2)
+	delay(0.02)
 	timer.reset()
 
 	while true do
@@ -27,8 +27,8 @@ end
 -------- MAIN PROGRAM --------
 reset()
 -- Beep in excitement
---beeper.beep(0.1, 1000)
---beeper.beep(0.1, 1000)
+beeper.beep(0.1, 1000)
+beeper.beep(0.1, 1000)
 
 -------- PARAMETERS --------
 --Vds
@@ -89,7 +89,7 @@ smub.source.output = smub.OUTPUT_OFF
 waitcomplete()
 
 -- Beep in excitement
---beeper.beep(0.1, 1300)
+beeper.beep(0.1, 1300)
 -------- END --------
 
 
