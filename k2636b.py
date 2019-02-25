@@ -3,6 +3,7 @@
 
 #import signal
 import os
+import sys
 import time
 import visa
 import signal
@@ -10,6 +11,7 @@ import serial
 from serial import Serial
 import pandas as pd
 import matplotlib.pyplot as plt
+import math
 
 class k2636b():
     data_path = str(os.path.dirname(os.path.realpath(__file__)) + "/data/")
@@ -49,6 +51,7 @@ class k2636b():
 
         except serial.SerialException:
             print('Cannot open Device Port.')
+            sys.exit()
             return 0
 
     def CloseConnect(self):
@@ -100,7 +103,6 @@ class k2636b():
         """ process al incoming data form K2636B   """
         try:
             self.kwrite('script.anonymous.run()')
-            print(fn)
 
             if self.FIG:
                 plt.xlabel("VGS or Time")
@@ -115,12 +117,22 @@ class k2636b():
                 print(txt)
                 self.DataSave(fn, txt)
 
-                if self.TAGS_END in txt: break
+                if self.TAGS_END in txt    : break
                 if self.EMERGENCY_STOP !=0 : break
                 if self.TAGS_Header in txt:
                     dd = pd.DataFrame(a)
                     df = pd.concat([df,dd],axis=1, sort=False)
                     a.clear()
+                else:
+                    if self.FIG:
+                        try:
+                            x = float(txt.split()[0])
+                            y = float(txt.split()[1])
+                        except ValueError:
+                            continue
+                        plt.scatter(x,y)
+                        plt.autoscale(enable=True, axis="both", tight=False)
+                        plt.pause(0.001)
 
                 txt = txt.replace(self.TAGS_Header, "")
                 a.append(txt.split())
@@ -129,6 +141,12 @@ class k2636b():
             df = pd.concat([df, dd], axis=1, sort=False)
 
             self.DataSave(fn,df)
+
+            if self.FIG :
+                print("PNG saved to file:",str(fn+".png"))
+                plt.savefig(str(fn+".png"))
+
+            print("DATA File: ",fn)
 
         except AttributeError:
             print('ERROR: some error in runTSP function')
@@ -193,8 +211,9 @@ class k2636b():
             file_name = self.check_file_name(file_name)
 
             self.loadTSP('k2636b_transfer_sweep.tsp', cmd)
+
             self.runTSP(file_name)
-            self.stats(file_name)
+            # self.stats(file_name)
 
             finish_time = time.time()
             print('Transfer curves complete. [%.2f] sec.' % ((finish_time - begin_time)))
@@ -227,6 +246,7 @@ class k2636b():
 
         try:
             begin_time = time.time()
+#            self.loadTSP('k2636b_output.tsp', cmd)
             self.loadTSP('k2636b_output.tsp', cmd)
 
             file_name = str(sample + '_output.txt')
