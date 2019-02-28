@@ -1,47 +1,36 @@
-#!/usr/bin/python3.5
-# -*- coding: utf-8 -*-
-
-#import signal
-import os
-import sys
+import threading
 import time
-import visa
-import signal
-import serial
-from serial import Serial
-import pandas as pd
-import matplotlib.pyplot as plt
-import usbtmc
+from Queue import Queue
 
+print_lock = threading.Lock()
 
-class OLED():
+class MyThread(threading.Thread):
+    def __init__(self, queue, args=(), kwargs=None):
+        threading.Thread.__init__(self, args=(), kwargs=None)
+        self.queue = queue
+        self.daemon = True
+        self.receive_messages = args[0]
 
-    def __init__(self):
-        self.dev_open()
+    def run(self):
+        print threading.currentThread().getName(), self.receive_messages
+        val = self.queue.get()
+        self.do_thing_with_message(val)
 
-    def __call__(self, *args, **kwargs):
-        return 0
-
-    def dev_open(self):
-        self.inst=usbtmc.Instrument(0x05e6,0x2636)
-        self.inst.write("*CLS")
-        return 0
-
-    def dev_close(self):
-        self.inst.close()
-        return 0
-
-    def dev_write(self):
-        return 0
-
-    def dev_read(self):
-        return 0
-
-    def info(self):
-        return 0
-
+    def do_thing_with_message(self, message):
+        if self.receive_messages:
+            with print_lock:
+                print(threading.currentThread().getName(), "Received {}".format(message))
 
 if __name__ == '__main__':
-    ol = OLED()
-    ol.info()
-    ol.dev_close()
+    threads = []
+    for t in range(10):
+        q = Queue()
+        threads.append(MyThread(q, args=(t % 2 == 0,)))
+        threads[t].start()
+        time.sleep(0.1)
+
+    for t in threads:
+        t.queue.put("Print this!")
+
+    for t in threads:
+        t.join()

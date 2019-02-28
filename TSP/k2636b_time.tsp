@@ -27,8 +27,8 @@ end
 -------- MAIN PROGRAM --------
 reset()
 -- Beep in excitement
-beeper.beep(0.1, 1000)
-beeper.beep(0.1, 1000)
+--beeper.beep(0.1, 1000)
+--beeper.beep(0.1, 1000)
 
 -------- PARAMETERS --------
 --Vds
@@ -58,10 +58,11 @@ smua.measure.nplc = NPLC
 smua.measure.analogfilter = 0
 smua.source.func = smua.OUTPUT_DCVOLTS
 smua.source.autorangev = smua.AUTORANGE_ON
-smua.source.limiti  = ALIMIT_I
-smua.source.limitv  = ALIMIT_V
-smua.measure.rangei = ALIMIT_R
-smua.sense = smua.SENSE_LOCAL
+--smua.source.limiti  = ALIMIT_I
+--smua.source.limitv  = ALIMIT_V
+--smua.measure.rangei = ALIMIT_R
+--smua.sense = smua.SENSE_LOCAL
+
 
 -- SMUB setup
 smub.measure.delay = smub.DELAY_AUTO
@@ -70,15 +71,19 @@ smub.measure.delayfactor = DELATE
 smub.measure.nplc = NPLC
 smub.measure.analogfilter = 0
 smub.source.func = smub.OUTPUT_DCVOLTS
-smub.source.limiti  = BLIMIT_I
-smub.source.limitv  = BLIMIT_V
-smub.measure.rangei = BLIMIT_R
+--smub.source.limiti  = BLIMIT_I
+--smub.source.limitv  = BLIMIT_V
+--smub.measure.rangei = BLIMIT_R
+--smub.sense = smub.SENSE_LOCAL
 
 
 -- MEASUREMENT ROUTINE
 display.smua.measure.func = display.MEASURE_DCAMPS
 display.smub.measure.func = display.MEASURE_DCAMPS
 
+
+smua.measure.autorangei = 1
+smub.measure.autorangei = 1
 
 f_time(Vds, Vgs, Tstep, Ttime)
 
@@ -89,7 +94,7 @@ smub.source.output = smub.OUTPUT_OFF
 waitcomplete()
 
 -- Beep in excitement
-beeper.beep(0.1, 1300)
+--beeper.beep(0.1, 1300)
 -------- END --------
 
 

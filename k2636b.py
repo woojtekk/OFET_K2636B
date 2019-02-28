@@ -1,24 +1,24 @@
 #!/usr/bin/python3.5
 # -*- coding: utf-8 -*-
 
-#import signal
 import os
 import sys
 import time
 import visa
 import signal
 import serial
-from serial import Serial
 import pandas as pd
 import matplotlib.pyplot as plt
 import usbtmc
+import datetime
+import plot
+import numpy as np
 
 class k2636b():
     data_path = str(os.path.dirname(os.path.realpath(__file__)) + "/data/")
     FIG = True
     TAGS_Header = ">>head<<"
     TAGS_END    = ">>END<<"
-    EMERGENCY_STOP=0
 
     def handler(self, signum, frame):
         print ("\n")
@@ -26,12 +26,22 @@ class k2636b():
         print ("========== Forever is over! ============")
         print ("========================================")
         print ("=============== ABORT! =================")
-        print ("========================================",self.EMERGENCY_STOP)
-        self.EMERGENCY_STOP+=1
+        print ("========================================")
+
+        self.kwrite('ABORT')
+        self.kwrite('loadscript')
+        self.kwrite('beeper.beep(0.2, 800)')
+        self.kwrite('beeper.beep(0.1, 850)')
+        self.kwrite('print("' + str(self.TAGS_END) + '")')
+        self.kwrite('reset()')
+        self.kwrite('endscript')
+
+        self.kwrite('script.anonymous.run()')
 
     def __init__(self):
         signal.signal(signal.SIGALRM, self.handler)
         signal.signal(signal.SIGINT,  self.handler)
+
         """ connect1 if you are using rs232   """
         # self.Connect1()
 
@@ -70,6 +80,8 @@ class k2636b():
 
     def CloseConnect(self):
         """Close connection to keithley."""
+
+
         try:
             # self.inst.clear()
             self.inst.close()
@@ -114,15 +126,13 @@ class k2636b():
             raise SystemExit
 
     def runTSP(self, fn="test"):
-        """ process al incoming data form K2636B   """
+        """ process all incoming data form K2636B   """
         try:
             self.kwrite('script.anonymous.run()')
 
             if self.FIG:
-                plt.xlabel("VGS or Time")
-                plt.axis([-1, 1, -1e-10, 1e-10])
-                plt.ylabel("IDS [A] / IGS [A]")
-                plt.title(os.path.basename(fn))
+                self.pl = plot.NBPlot(fn)
+
 
             a=[]
             df=pd.DataFrame()
@@ -132,21 +142,14 @@ class k2636b():
                 self.DataSave(fn, txt)
 
                 if self.TAGS_END in txt    : break
-                if self.EMERGENCY_STOP !=0 : break
                 if self.TAGS_Header in txt:
                     dd = pd.DataFrame(a)
                     df = pd.concat([df,dd],axis=1, sort=False)
                     a.clear()
                 else:
                     if self.FIG:
-                        try:
-                            x = float(txt.split()[0])
-                            y = float(txt.split()[1])
-                        except ValueError:
-                            continue
-                        plt.scatter(x,y)
-                        plt.autoscale(enable=True, axis="both", tight=False)
-                        plt.pause(0.001)
+                        d=np.array([float(txt.split()[0]), float(txt.split()[1]),float(txt.split()[2])])
+                        self.pl.plot(d)
 
                 txt = txt.replace(self.TAGS_Header, "")
                 a.append(txt.split())
@@ -157,8 +160,9 @@ class k2636b():
             self.DataSave(fn,df)
 
             if self.FIG :
-                print("PNG saved to file:",str(fn+".png"))
-                plt.savefig(str(fn+".png"))
+                self.pl.plot(finished=True)
+                # print("PNG saved to file:",str(fn+".png"))
+                # self.pl.savefig(str(fn+".png"))
 
             print("DATA File: ",fn)
 
@@ -196,10 +200,9 @@ class k2636b():
             filename = "{0}_{1:03d}{2}".format(fname, index, ext)
             index += 1
         filename = str(dir + "/" + filename)
-        with open(str("filename.log"), 'a') as the_file: the_file.write(str(filename) + "\n")
+        with open(str("filename.log"), 'a') as the_file: the_file.write(str(datetime.datetime.now()) +"\t"+ str(filename) + "\n")
 
         return filename
-
 
 
     # ------------- TRANSFER
@@ -275,38 +278,6 @@ class k2636b():
         except(AttributeError):
             print('Cannot perform output sweep: no keithley connected........')
 
-    # ------------ IV_sweep
-    def iv_sweep(self, *param):
-        #	param_output = [FName, VDS_start, VDS_stop, VDS_step,  VGS_start, VGS_stop, VGS_step, NPLC, DEL, SWEEP ]
-        #	param_output = ["qq",          0,         20,       1,         0,       20,        5,  0.1,   1, "True"]
-
-        sample = param[0]
-        cmd = "VdsStart = " + str(float(param[1])) + "\n" \
-                                                     "VdsEnd  = " + str(float(param[2])) + "\n" \
-                                                                                           "VdsStep  = " + str(
-            float(param[3])) + "\n"
-
-        self.BAR_MAX = 50  # abs(  ((float(param[2])-float(param[1]))/float(param[3])+1)*((float(param[5])-float(param[4]))/float(param[6])+1) )-1
-
-        try:
-            begin_time = time.time()
-            self.loadTSP('k2636b_iv_sweep.tsp', cmd)
-
-            file_name = str(self.data_path + sample + '_iv-sweep.txt')
-            file_name = self.check_file_name(file_name)
-
-            self.runTSP("IV-SWEEP  \t", file_name)
-            self.stats(file_name)
-
-            data = self.readBuferOutput()
-            self.save_data(file_name, data)
-
-            finish_time = time.time()
-            print('Output sweeps complete. [%.2f] sec.' % ((finish_time - begin_time)))
-
-        except(AttributeError):
-            print('Cannot perform output sweep: no keithley connected........')
-
     # ------------ TIME
     def czasowe(self, *param):
         """	param = [FName , VDS, VGS, TIME, NPLC, DEL]
@@ -340,7 +311,4 @@ if __name__ == '__main__':
 
     kk = k2636b()
     kk.info()
-
-
-    print(    "...::: KONIEC :::... [%.2f]" % (time.time() - btime))
     kk.CloseConnect()
