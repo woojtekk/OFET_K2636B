@@ -1,6 +1,6 @@
 import cv
 import opencv.highgui
-
+import time
 
 def get_image():
     image = opencv.highgui.cvQueryFrame(camera)
