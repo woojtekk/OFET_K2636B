@@ -1,18 +1,20 @@
 import numpy as np
 import cv2
 
-img = cv2.imread('image2.png')
-imgray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-ret,thresh = cv2.threshold(imgray,127,255,0)
-contours, hierarchy= cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-# print(cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE))
+cap = cv2.VideoCapture(0)
 
-print(contours)
+while(True):
+    # Capture frame-by-frame
+    ret, frame = cap.read()
 
-#cv2.drawContours(img, contours, 3, (0,255,0), 3)
+    # Our operations on the frame come here
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+    # Display the resulting frame
+    cv2.imshow('frame',gray)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-#cv2.imshow("Robust", img)
-#cv2.waitKey(0),
-
-
+# When everything done, release the capture
+cap.release()
+cv2.destroyAllWindows()

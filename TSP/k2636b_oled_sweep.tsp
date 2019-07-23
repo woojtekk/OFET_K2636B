@@ -17,10 +17,10 @@ function f_transfer(vds,start,stop,step)
 	Vg=start
 	while true do
 		smub.source.levelv = Vg
-		print(Vg, smua.measure.i(),smub.measure.i(),vds)
+		print(Vg, smub.measure.i(),smub.measure.i(),vds)
 		delay(0.2)
 		delay(0.2)
-		Vg=Vg+step	 
+		Vg=Vg+step
 		if (stop-Vg) < 0 and step>0 then break	end
 		if (stop-Vg) > 0 and step<0 then break	end
 	end

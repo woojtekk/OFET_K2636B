@@ -4,30 +4,45 @@
 -- INPUT sweep start and end points with ABSOLUTE step size
 -------------------------------
 
-function f_transfer(vds,start,stop,step)
-
-    print(">>head<<VGS("..start..") IDS("..start..") IGS("..start..") VDS("..start..")")
-
+function f_time(vds, vgs, tstep, tlong)
+    print(">>head<< #dt IDS  IGS  VDS  VGS")
+    vgs_new=0
+    xx=0
 	smua.source.levelv = vds
-	smub.source.levelv = start
+	smub.source.levelv = vgs
+	timer.reset()
 	smua.source.output = smua.OUTPUT_ON
 	smub.source.output = smub.OUTPUT_ON
-	delay(0.2)
+	--delay(0.2)
+	timer.reset()
 
-	Vg=start
+    tjump=0
 	while true do
-		smub.source.levelv = Vg
-		print(Vg, smua.measure.i(),smub.measure.i(),vds)
-		delay(0.2)
-		delay(0.2)
-		Vg=Vg+step	 
-		if (stop-Vg) < 0 and step>0 then break	end
-		if (stop-Vg) > 0 and step<0 then break	end
-	end
+		dt = timer.measure.t()
+		print(dt, smua.measure.i(), smub.measure.i(), smua.measure.v(), smub.measure.v())
+		--delay(tstep)
 
-	smua.source.output = smua.OUTPUT_OFF
-	smub.source.output = smub.OUTPUT_OFF
+        if tjump>=20 and (xx==0) then
+            smub.source.levelv = vgs_new
+            vgs_new = vgs_new-2
+            xx=1
+            tjump=0
+        end
+
+        if (tjump>=20) and (xx==1) then
+            smub.source.levelv = vgs
+            vgs_new = vgs_new-2
+            xx=0
+            tjump=0
+        end
+
+
+        tjump=tjump+1
+
+		if dt >= tlong then break end
+	end
 end
+
 
 -------- MAIN PROGRAM --------
 reset()
@@ -66,7 +81,8 @@ smua.source.autorangev = smua.AUTORANGE_ON
 --smua.source.limiti  = ALIMIT_I
 --smua.source.limitv  = ALIMIT_V
 --smua.measure.rangei = ALIMIT_R
-smua.sense = smua.SENSE_LOCAL
+--smua.sense = smua.SENSE_LOCAL
+
 
 -- SMUB setup
 smub.measure.delay = smub.DELAY_AUTO
@@ -78,30 +94,27 @@ smub.source.func = smub.OUTPUT_DCVOLTS
 --smub.source.limiti  = BLIMIT_I
 --smub.source.limitv  = BLIMIT_V
 --smub.measure.rangei = BLIMIT_R
+--smub.sense = smub.SENSE_LOCAL
 
 
 -- MEASUREMENT ROUTINE
 display.smua.measure.func = display.MEASURE_DCAMPS
 display.smub.measure.func = display.MEASURE_DCAMPS
 
+
 smua.measure.autorangei = 1
 smub.measure.autorangei = 1
 
-if (VgsStart) <= (VgsEnd) then
-	VgsStep = math.abs(VgsStep)
-else
-	VgsStep = -1*math.abs(VgsStep)
-end
-
-
-f_transfer((Vds),(VgsStart), (VgsEnd), (VgsStep))
-if SWEEP  then
-    f_transfer((Vds),(VgsEnd), (VgsStart), (-1*VgsStep))
-end
+f_time(Vds, Vgs, Tstep, Ttime)
 
 smua.source.output = smua.OUTPUT_OFF
 smub.source.output = smub.OUTPUT_OFF
+
+
 waitcomplete()
+
+-- Beep in excitement
+--beeper.beep(0.1, 1300)
 -------- END --------
 
 

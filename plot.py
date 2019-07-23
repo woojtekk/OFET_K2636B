@@ -39,8 +39,8 @@ class ProcessPlotter(object):
                 self.x.append(command[0])
                 self.y1.append(command[1])
                 self.y2.append(command[2])
-                self.ax.plot(self.x, self.y1, 'ro',color='r')
-                self.bx.plot(self.x, self.y2, 'ro',color='b')
+                self.ax.plot(self.x, self.y1, 'ro',color='b')
+                self.bx.plot(self.x, self.y2, 'ro',color='r')
 
         self.fig.canvas.draw()
         return True
@@ -51,13 +51,14 @@ class ProcessPlotter(object):
         self.bx = self.ax.twinx()
 
         self.fig.suptitle(os.path.basename(self.fname))
-
         self.ax.set_xlabel("VGS [V] or Time [s]")
         self.ax.set_ylabel("IDS [A]",color='b')
         self.bx.set_ylabel("IGS [A]",color='r')
 
         self.ax.ticklabel_format(style='sci', axis='y', scilimits=(1, 4))
         self.bx.ticklabel_format(style='sci', axis='y', scilimits=(1, 4))
+        self.ax.set_yscale('log')
+        self.bx.set_yscale('log')
 
         self.ax.grid(color='b', linestyle='--', linewidth=0.1)
 

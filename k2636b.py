@@ -13,12 +13,18 @@ import usbtmc
 import datetime
 import plot
 import numpy as np
+import math
+import cv2
+from  camera2 import cammera2
+
+
 
 class k2636b():
     data_path = str(os.path.dirname(os.path.realpath(__file__)) + "/data/")
     FIG = True
     TAGS_Header = ">>head<<"
     TAGS_END    = ">>END<<"
+    oledd = False
 
     def handler(self, signum, frame):
         print ("\n")
@@ -47,6 +53,7 @@ class k2636b():
 
         """ connect2 if you are using usb connection via usbtcm   """
         self.Connect2()
+
 
     def info(self):
         print(self.inst.ask("*IDN?"))
@@ -110,6 +117,7 @@ class k2636b():
     def loadTSP(self, script_name, param=''):
         """Load an anonymous TSP script into the K2636 nonvolatile memory."""
         print("Loading: ", script_name)
+
         try:
             self.kwrite('ABORT')
             self.kwrite('loadscript')
@@ -121,50 +129,115 @@ class k2636b():
             self.kwrite('reset()')
             self.kwrite('endscript')
 
+            #cv.NamedWindow("camera", 1)
+            # capture = cv.CaptureFromCAM(0)
+
         except AttributeError:
             print('ERROR: Could not find tsp script. Check path.')
             raise SystemExit
 
+    # def runTSP(self, fn="test"):
+    #     """ process all incoming data form K2636B   """
+    #     try:
+    #         self.kwrite('script.anonymous.run()')
+    #
+    #         if self.FIG:
+    #             self.pl = plot.NBPlot(fn)
+    #
+    #         a=[]
+    #         df=pd.DataFrame()
+    #         while True:
+    #             txt = self.kread()
+    #
+    #             print(txt)
+    #             self.DataSave(fn, txt)
+    #
+    #             if self.TAGS_END in txt    : break
+    #             if self.TAGS_Header in txt:
+    #                 dd = pd.DataFrame(a)
+    #                 df = pd.concat([df,dd],axis=1, sort=False)
+    #                 a.clear()
+    #             else:
+    #                 if self.FIG:
+    #                     d=np.array([float(txt.split()[0]), float(txt.split()[1]),float(txt.split()[2])])
+    #                     self.pl.plot(d)
+    #
+    #             txt = txt.replace(self.TAGS_Header, "")
+    #             a.append(txt.split())
+    #
+    #         dd = pd.DataFrame(a)
+    #         df = pd.concat([df, dd], axis=1, sort=False)
+    #
+    #         self.DataSave(fn,df)
+    #
+    #         if self.FIG :
+    #             self.pl.plot(finished=True)
+    #             # print("PNG saved to file:",str(fn+".png"))
+    #             # self.pl.savefig(str(fn+".png"))
+    #
+    #         print("DATA File: ",fn)
+    #
+    #     except AttributeError:
+    #         print('ERROR: some error in runTSP function')
+    #         raise SystemExit
+
     def runTSP(self, fn="test"):
         """ process all incoming data form K2636B   """
+        self.oledd = True
         try:
-            self.kwrite('script.anonymous.run()')
-
+            if self.oledd == True:
+                self.d = cammera2()
+                self.d.run()
+                time.sleep(1)
+                
             if self.FIG:
                 self.pl = plot.NBPlot(fn)
+                time.sleep(1)
+                
+            self.kwrite('script.anonymous.run()')
 
+            c = 0
+            lum=0
+            a = []
+            df = pd.DataFrame()
 
-            a=[]
-            df=pd.DataFrame()
             while True:
                 txt = self.kread()
-                print(txt)
+                print(txt,self.d.lum)
                 self.DataSave(fn, txt)
-
-                if self.TAGS_END in txt    : break
+            
+                if self.TAGS_END in txt: break
                 if self.TAGS_Header in txt:
                     dd = pd.DataFrame(a)
-                    df = pd.concat([df,dd],axis=1, sort=False)
+                    df = pd.concat([df, dd], axis=1, sort=False)
                     a.clear()
                 else:
                     if self.FIG:
-                        d=np.array([float(txt.split()[0]), float(txt.split()[1]),float(txt.split()[2])])
+                        if self.oledd == True:
+                            d = np.array([float(txt.split()[0]), float(txt.split()[1]), float(self.d.lum)])
+                        else:
+                            d = np.array([float(txt.split()[0]), float(txt.split()[1]), float(txt.split()[2])])
                         self.pl.plot(d)
-
+            
                 txt = txt.replace(self.TAGS_Header, "")
                 a.append(txt.split())
-
+        
             dd = pd.DataFrame(a)
             df = pd.concat([df, dd], axis=1, sort=False)
+            self.DataSave(fn, df)
+            
+            # if self.oledd == True:  self.d.stop()
 
-            self.DataSave(fn,df)
 
-            if self.FIG :
+            if self.FIG:
                 self.pl.plot(finished=True)
                 # print("PNG saved to file:",str(fn+".png"))
                 # self.pl.savefig(str(fn+".png"))
+        
+            print("DATA File: ", fn)
+            self.d.stop_threads=True
+            cv2.destroyAllWindows()
 
-            print("DATA File: ",fn)
 
         except AttributeError:
             print('ERROR: some error in runTSP function')
@@ -236,6 +309,43 @@ class k2636b():
             print('Transfer curves complete. [%.2f] sec.' % ((finish_time - begin_time)))
             return 0
 
+        except(AttributeError):
+            print('Cannot perform output sweep: no keithley connected.')
+
+    # ------------- oled
+    def oled(self, *param):
+        """K2636 Transfer sweeps."""
+        try:
+            print("++++++++++++++++++++++++++++++++++++++")
+            self.oledd=False
+            begin_time = time.time()
+        
+            if param[9]: ss = "true"
+            sample = param[0]
+            cmd = "Vds      = " + str(float(param[1])) + "\n" \
+                  "VgsStart = " + str(float(param[2])) + "\n" \
+                  "VgsEnd   = " + str(float(param[3])) + "\n" \
+                  "VgsStep  = " + str(float(param[4])) + "\n" \
+                  "SWEEP    = " + str(ss) + "\n" \
+                  "NPLC     = " + str(float(param[7])) + "\n" \
+                  "DELATE   = " + str(float(param[8])) + "\n"
+        
+            self.BAR_MAX = abs((float(param[3]) - float(param[2])) / float(param[4]))
+            self.BAR_MAX = (2 * (self.BAR_MAX + 1))
+        
+            file_name = str(sample + '_oled.txt')
+            file_name = self.check_file_name(file_name)
+        
+            self.loadTSP('k2636b_oled_sweep.tsp', cmd)
+        
+            self.runTSP(file_name)
+            # self.stats(file_name)
+        
+            finish_time = time.time()
+            print('OLED characteristic complete. [%.2f] sec.' % ((finish_time - begin_time)))
+
+            return 0
+    
         except(AttributeError):
             print('Cannot perform output sweep: no keithley connected.')
 
