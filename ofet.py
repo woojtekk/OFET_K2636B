@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
 
     if args.bar: k2636b.BAR = True
-    if args.fig: k2636b.FIG = False
+    if args.fig: k2636b.if_plot_figure = False
 
     if args.filename != "tr00": FILE_NAME = args.filename
 

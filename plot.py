@@ -16,13 +16,36 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import random
 
 class ProcessPlotter(object):
-    def __init__(self,f):
-        self.fname=f
+    def __init__(self,fname):
         self.x = []
         self.y1 = []
         self.y2 = []
+
+        if isinstance(fname, list):
+            self.fname        = fname[0]
+            self.xlabel  = fname[1]
+            self.y1label = fname[2]
+            self.y2label = fname[3]
+            self.title   = fname[4]
+            self.xscale  = fname[5]
+            self.y1scale = fname[6]
+            self.y2scale = fname[7]
+            self.type    = fname[8]
+        else:
+            self.fname   = fname
+            self.xlabel  = "VGS [V] / Time [sec.]"
+            self.y1label = "IDS [A]"
+            self.y2label = "IGS [A]"
+            self.title   = fname
+            self.xscale  = "lin"
+            self.y1scale = "log"
+            self.y2scale = "log"
+            self.type    = "typ"
+
+
 
     def terminate(self):
         plt.savefig(str(self.fname+".png"))
@@ -39,8 +62,8 @@ class ProcessPlotter(object):
                 self.x.append(command[0])
                 self.y1.append(command[1])
                 self.y2.append(command[2])
-                self.ax.plot(self.x, self.y1, 'ro',color='b')
-                self.bx.plot(self.x, self.y2, 'ro',color='r')
+                self.ax.plot(self.x, self.y1, 'ro',marker='o',color='b')
+                self.bx.plot(self.x, self.y2, 'ro',marker='o',color='r')
 
         self.fig.canvas.draw()
         return True
@@ -51,14 +74,14 @@ class ProcessPlotter(object):
         self.bx = self.ax.twinx()
 
         self.fig.suptitle(os.path.basename(self.fname))
-        self.ax.set_xlabel("VGS [V] or Time [s]")
-        self.ax.set_ylabel("IDS [A]",color='b')
-        self.bx.set_ylabel("IGS [A]",color='r')
+        self.ax.set_xlabel(self.xlabel  , color='b')
+        self.ax.set_ylabel(self.y1label , color='b')
+        self.bx.set_ylabel(self.y2label , color='r')
 
         self.ax.ticklabel_format(style='sci', axis='y', scilimits=(1, 4))
         self.bx.ticklabel_format(style='sci', axis='y', scilimits=(1, 4))
-        self.ax.set_yscale('log')
-        self.bx.set_yscale('log')
+        self.ax.set_yscale(self.y1scale)
+        self.bx.set_yscale(self.y2scale)
 
         self.ax.grid(color='b', linestyle='--', linewidth=0.1)
 
@@ -82,4 +105,27 @@ class NBPlot(object):
             time.sleep(0.5)
         else:
             send(data)
+
+
+#======================================================
+#======================================================
+#======================================================
+#======================================================
+
+
+if __name__ == '__main__':
+
+    # fn=["fname","X","Y1","Y2","TITLE","xxx","log","log","typ"]
+    fn="asdasdas"
+    pl = NBPlot(fn)
+    x=0
+    while x<=20:
+        x+= 1
+        y = random.randint(1,101)
+        z = random.randint(1, 101)
+        d = np.array([float(x), float(y), float(z)])
+        pl.plot(d)
+
+        time.sleep(0.5)
+        print(isinstance(50, list))
 

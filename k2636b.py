@@ -18,13 +18,21 @@ import cv2
 from  camera2 import cammera2
 
 
+class  config():
+    def __init__(self):
+        print("init config")
+
 
 class k2636b():
     data_path = str(os.path.dirname(os.path.realpath(__file__)) + "/data/")
-    FIG = True
+
+    if_camera       = False
+    if_verbose      = True
+    if_plot_figure  = True
+
     TAGS_Header = ">>head<<"
     TAGS_END    = ">>END<<"
-    oledd = False
+
 
     def handler(self, signum, frame):
         print ("\n")
@@ -183,41 +191,34 @@ class k2636b():
 
     def runTSP(self, fn="test"):
         """ process all incoming data form K2636B   """
-        self.oledd = True
         try:
-            if self.oledd == True:
+            if self.if_camera == True:
                 self.d = cammera2()
                 self.d.run()
                 time.sleep(1)
                 
-            if self.FIG:
+            if self.if_plot_figure:
                 self.pl = plot.NBPlot(fn)
                 time.sleep(1)
                 
             self.kwrite('script.anonymous.run()')
 
-            c = 0
-            lum=0
             a = []
             df = pd.DataFrame()
 
             while True:
                 txt = self.kread()
-                print(txt,self.d.lum)
+                # print(txt)
                 self.DataSave(fn, txt)
             
-                if self.TAGS_END in txt: break
+                if self.TAGS_END    in txt: break
                 if self.TAGS_Header in txt:
                     dd = pd.DataFrame(a)
                     df = pd.concat([df, dd], axis=1, sort=False)
                     a.clear()
-                else:
-                    if self.FIG:
-                        if self.oledd == True:
-                            d = np.array([float(txt.split()[0]), float(txt.split()[1]), float(self.d.lum)])
-                        else:
-                            d = np.array([float(txt.split()[0]), float(txt.split()[1]), float(txt.split()[2])])
-                        self.pl.plot(d)
+                elif self.if_plot_figure:
+                    d = np.array([float(txt.split()[0]), float(txt.split()[1]), float(txt.split()[2])])
+                    self.pl.plot(d)
             
                 txt = txt.replace(self.TAGS_Header, "")
                 a.append(txt.split())
@@ -229,7 +230,7 @@ class k2636b():
             # if self.oledd == True:  self.d.stop()
 
 
-            if self.FIG:
+            if self.if_plot_figure:
                 self.pl.plot(finished=True)
                 # print("PNG saved to file:",str(fn+".png"))
                 # self.pl.savefig(str(fn+".png"))
@@ -245,6 +246,7 @@ class k2636b():
 
     def DataSave(self,fn,data):
         """  Save RAW data and dataframe data to another file"""
+        if self.if_verbose: print(data)
         if isinstance(data, pd.DataFrame):
             data.to_csv(fn, sep=' ', encoding='utf-8', index=False,header=None)
         else:
@@ -317,7 +319,7 @@ class k2636b():
         """K2636 Transfer sweeps."""
         try:
             print("++++++++++++++++++++++++++++++++++++++")
-            self.oledd=False
+            self.if_camera=False
             begin_time = time.time()
         
             if param[9]: ss = "true"
@@ -418,7 +420,7 @@ if __name__ == '__main__':
 
     btime = time.time()
     os.system('clear')
-
-    kk = k2636b()
-    kk.info()
-    kk.CloseConnect()
+    #kk = k2636b()
+    #kk.info()
+    #kk.CloseConnect()
+    conf=config()
