@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8e877ba8-a418-4d05-8ac3-327a2f57bdd1" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/configure.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/OFET_K2636B.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/OFET_K2636B.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configure.py" beforeDir="false" afterPath="$PROJECT_DIR$/configure.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/k2636b.py" beforeDir="false" afterPath="$PROJECT_DIR$/k2636b.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ofet.py" beforeDir="false" afterPath="$PROJECT_DIR$/ofet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/plot.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -32,6 +32,7 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -62,8 +63,18 @@
       <workItem from="1564043280107" duration="236000" />
       <workItem from="1564055327332" duration="3257000" />
       <workItem from="1564124527600" duration="2215000" />
-      <workItem from="1564479899580" duration="1697000" />
+      <workItem from="1564479899580" duration="2007000" />
+      <workItem from="1567498930198" duration="1164000" />
+      <workItem from="1567511489059" duration="3554000" />
     </task>
+    <task id="LOCAL-00001" summary="update">
+      <created>1564485737955</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1564485737955</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -81,5 +92,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="update" />
+    <option name="LAST_COMMIT_MESSAGE" value="update" />
   </component>
 </project>

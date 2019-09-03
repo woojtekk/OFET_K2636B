@@ -53,8 +53,8 @@ class k2636b():
         self.kwrite('script.anonymous.run()')
 
     def __init__(self):
-        signal.signal(signal.SIGALRM, self.handler)
-        signal.signal(signal.SIGINT,  self.handler)
+        # signal.signal(signal.SIGALRM, self.handler)
+        # signal.signal(signal.SIGINT,  self.handler)
 
         """ connect1 if you are using rs232   """
         # self.Connect1()
@@ -72,6 +72,8 @@ class k2636b():
         print("OPC:",self.inst.ask("*OPC?"))
 
     def Connect2(self):
+        print(usbtmc.list_devices())
+        print(usbtmc.find_device())
         self.inst=usbtmc.Instrument(0x05e6,0x2636)
         self.inst.write("*CLS")
         return 0
@@ -419,8 +421,8 @@ class k2636b():
 if __name__ == '__main__':
 
     btime = time.time()
-    os.system('clear')
-    #kk = k2636b()
-    #kk.info()
+    # os.system('clear')
+    kk = k2636b()
+    kk.info()
     #kk.CloseConnect()
     conf=config()

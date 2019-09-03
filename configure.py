@@ -6,11 +6,10 @@ import configparser
 
 class configure():
     def __init__(self):
-        print("init")
         config = configparser.ConfigParser()
         config.read('example.ini')
-        for x in config.sections():
-            print(x,config.items(x))
+        print(config.get("K2636B","adress"))
+
 
 if __name__ == '__main__':
     cc=configure()
