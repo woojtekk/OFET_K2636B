@@ -18,8 +18,7 @@ function f_transfer(vds,start,stop,step)
 	while true do
 		smub.source.levelv = Vg
 		print(Vg, smua.measure.i(),smub.measure.i(),vds)
-		delay(0.2)
-		delay(0.2)
+		delay(0.15)
 		Vg=Vg+step	 
 		if (stop-Vg) < 0 and step>0 then break	end
 		if (stop-Vg) > 0 and step<0 then break	end
@@ -34,6 +33,20 @@ reset()
 -- Beep in excitement
 --beeper.beep(0.1, 1000)
 --beeper.beep(0.1, 1000)
+beeper.beep(0.1, 659.25)
+beeper.beep(0.1, 587.33)
+beeper.beep(0.2, 349.23)
+beeper.beep(0.2, 392.00)
+beeper.beep(0.1, 523.25)
+beeper.beep(0.1, 493.88)
+beeper.beep(0.2, 293.66)
+beeper.beep(0.2, 329.63)
+beeper.beep(0.1, 493.88)
+beeper.beep(0.1, 440.00)
+beeper.beep(0.2, 261.63)
+beeper.beep(0.2, 329.63)
+beeper.beep(0.5, 440.00)
+
 
 -------- PARAMETERS --------
 --Vds
@@ -79,6 +92,8 @@ smub.source.func = smub.OUTPUT_DCVOLTS
 --smub.source.limitv  = BLIMIT_V
 --smub.measure.rangei = BLIMIT_R
 
+smua.DELAY_AUTO
+smub.DELAY_AUTO
 
 -- MEASUREMENT ROUTINE
 display.smua.measure.func = display.MEASURE_DCAMPS

@@ -41,6 +41,19 @@ print("zaczynamy")
 
 -- Beep in excitement
 -- beeper.beep(1, 600)
+beeper.beep(0.1, 659.25)
+beeper.beep(0.1, 587.33)
+beeper.beep(0.2, 349.23)
+beeper.beep(0.2, 392.00)
+beeper.beep(0.1, 523.25)
+beeper.beep(0.1, 493.88)
+beeper.beep(0.2, 293.66)
+beeper.beep(0.2, 329.63)
+beeper.beep(0.1, 493.88)
+beeper.beep(0.1, 440.00)
+beeper.beep(0.2, 261.63)
+beeper.beep(0.2, 329.63)
+beeper.beep(0.5, 440.00)
 
 -- Clear buffers
 smua.nvbuffer1.clear()

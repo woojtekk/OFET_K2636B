@@ -81,7 +81,7 @@ class ProcessPlotter(object):
         self.ax.ticklabel_format(style='sci', axis='y', scilimits=(1, 4))
         self.bx.ticklabel_format(style='sci', axis='y', scilimits=(1, 4))
         self.ax.set_yscale(self.y1scale)
-        self.bx.set_yscale(self.y2scale)
+        # self.bx.set_yscale(self.y2scale)
 
         self.ax.grid(color='b', linestyle='--', linewidth=0.1)
 

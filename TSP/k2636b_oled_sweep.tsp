@@ -4,36 +4,34 @@
 -- INPUT sweep start and end points with ABSOLUTE step size
 -------------------------------
 
-function f_transfer(vds,start,stop,step)
+function f_transfer(start,stop,step)
 
     print(">>head<<VGS("..start..") IDS("..start..") IGS("..start..") VDS("..start..")")
 
-	smua.source.levelv = vds
 	smub.source.levelv = start
-	smua.source.output = smua.OUTPUT_ON
 	smub.source.output = smub.OUTPUT_ON
 	delay(0.2)
 
 	Vg=start
 	while true do
 		smub.source.levelv = Vg
-		print(Vg, smub.measure.i(),smub.measure.i(),vds)
-		delay(0.2)
-		delay(0.2)
+		print(Vg, smub.measure.i(),smub.measure.i(),step)
+		delay(0.7)
 		Vg=Vg+step
 		if (stop-Vg) < 0 and step>0 then break	end
 		if (stop-Vg) > 0 and step<0 then break	end
 	end
 
-	smua.source.output = smua.OUTPUT_OFF
 	smub.source.output = smub.OUTPUT_OFF
 end
 
 -------- MAIN PROGRAM --------
 reset()
+--smua.reset()
+--smub.reset()
+
 -- Beep in excitement
---beeper.beep(0.1, 1000)
---beeper.beep(0.1, 1000)
+beeper.beep(0.1, 2400)
 
 -------- PARAMETERS --------
 --Vds
@@ -52,26 +50,13 @@ NPLC   = 1
 DELATE = 1
 
 format.data = format.ASCII
-smua.measure.count = 1
 smub.measure.count = 1
 
--- SMUA setup
-smua.measure.delay = smua.DELAY_AUTO
-smua.measure.delay = 0
-smua.measure.delayfactor = DELATE
-smua.measure.nplc = NPLC
-smua.measure.analogfilter = 0
-smua.source.func = smua.OUTPUT_DCVOLTS
-smua.source.autorangev = smua.AUTORANGE_ON
---smua.source.limiti  = ALIMIT_I
---smua.source.limitv  = ALIMIT_V
---smua.measure.rangei = ALIMIT_R
-smua.sense = smua.SENSE_LOCAL
 
 -- SMUB setup
 smub.measure.delay = smub.DELAY_AUTO
 smub.measure.delay = 0
-smub.measure.delayfactor = DELATE
+smub.measure.delayfactor = smub.DELAY_AUTO
 smub.measure.nplc = NPLC
 smub.measure.analogfilter = 0
 smub.source.func = smub.OUTPUT_DCVOLTS
@@ -81,27 +66,25 @@ smub.source.func = smub.OUTPUT_DCVOLTS
 
 
 -- MEASUREMENT ROUTINE
-display.smua.measure.func = display.MEASURE_DCAMPS
 display.smub.measure.func = display.MEASURE_DCAMPS
-
-smua.measure.autorangei = 1
 smub.measure.autorangei = 1
 
-if (VgsStart) <= (VgsEnd) then
-	VgsStep = math.abs(VgsStep)
+if (OLED_VStart) <= (OLED_VEnd) then
+	OLED_VStep = math.abs(OLED_VStep)
 else
-	VgsStep = -1*math.abs(VgsStep)
+	OLED_VStep = -1*math.abs(OLED_VStep)
 end
 
 
-f_transfer((Vds),(VgsStart), (VgsEnd), (VgsStep))
+f_transfer((OLED_VStart), (OLED_VEnd), (OLED_VStep))
 if SWEEP  then
-    f_transfer((Vds),(VgsEnd), (VgsStart), (-1*VgsStep))
+    f_transfer((OLED_VEnd), (OLED_VStart), (-1*OLED_VStep))
 end
 
-smua.source.output = smua.OUTPUT_OFF
-smub.source.output = smub.OUTPUT_OFF
 waitcomplete()
+beeper.beep(0.1, 2400)
+beeper.beep(0.1, 2400)
+
 -------- END --------
 
 
