@@ -36,14 +36,17 @@ class ProcessPlotter(object):
             self.type    = fname[8]
         else:
             self.fname   = fname
-            self.xlabel  = "VGS [V] / Time [sec.]"
-            self.y1label = "IDS [A]"
-            self.y2label = "IGS [A]"
+            self.xlabel  = "V [V]"
+            self.y1label = "I [A]"
+            self.y2label = "Luminance [lum]"
             self.title   = fname
             self.xscale  = "lin"
             self.y1scale = "log"
             self.y2scale = "log"
             self.type    = "typ"
+            self.y1style   = "ro" # "k",
+            self.y2style   = "ro" # "k"
+
 
 
 
@@ -62,8 +65,8 @@ class ProcessPlotter(object):
                 self.x.append(command[0])
                 self.y1.append(command[1])
                 self.y2.append(command[2])
-                self.ax.plot(self.x, self.y1, 'ro',marker='o',color='b')
-                self.bx.plot(self.x, self.y2, 'ro',marker='o',color='r')
+                self.ax.plot(self.x, self.y1, self.y1style, marker='o',color='b')
+                self.bx.plot(self.x, self.y2, self.y2style, marker='o',color='r')
 
         self.fig.canvas.draw()
         return True
@@ -81,7 +84,7 @@ class ProcessPlotter(object):
         self.ax.ticklabel_format(style='sci', axis='y', scilimits=(1, 4))
         self.bx.ticklabel_format(style='sci', axis='y', scilimits=(1, 4))
         self.ax.set_yscale(self.y1scale)
-        # self.bx.set_yscale(self.y2scale)
+        self.bx.set_yscale(self.y2scale)
 
         self.ax.grid(color='b', linestyle='--', linewidth=0.1)
 

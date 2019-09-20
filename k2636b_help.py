@@ -17,8 +17,8 @@ def help():
     parser.add_argument('-l',
                         dest='oled',
                         action='append',
-                        nargs=4,
-                        # metavar=('VDS', 'VGS_START', 'VGS_STOP', 'VGS_DELTA '),
+                        nargs=3,
+                        metavar=('VGS_START', 'VGS_STOP', 'VGS_DELTA '),
                         help='help: oled test')
 
     parser.add_argument('-i',

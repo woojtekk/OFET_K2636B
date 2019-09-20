@@ -6,7 +6,7 @@
 
 function f_transfer(start,stop,step)
 
-    print(">>head<<VGS("..start..") IDS("..start..") IGS("..start..") VDS("..start..")")
+    print(">>head<<V("..start..") I("..start..")")
 
 	smub.source.levelv = start
 	smub.source.output = smub.OUTPUT_ON
@@ -15,8 +15,8 @@ function f_transfer(start,stop,step)
 	Vg=start
 	while true do
 		smub.source.levelv = Vg
-		print(Vg, smub.measure.i(),smub.measure.i(),step)
-		delay(0.7)
+		print(Vg, smub.measure.i())
+		delay(0.5)
 		Vg=Vg+step
 		if (stop-Vg) < 0 and step>0 then break	end
 		if (stop-Vg) > 0 and step<0 then break	end
@@ -77,9 +77,9 @@ end
 
 
 f_transfer((OLED_VStart), (OLED_VEnd), (OLED_VStep))
-if SWEEP  then
+--if SWEEP  then
     f_transfer((OLED_VEnd), (OLED_VStart), (-1*OLED_VStep))
-end
+--end
 
 waitcomplete()
 beeper.beep(0.1, 2400)

@@ -3,6 +3,7 @@
 
 import k2636b_help
 from k2636b import k2636b
+# import k2636b_oled
 import usb
 import sys
 
@@ -30,12 +31,12 @@ if __name__ == '__main__':
     if args.filename != "tr00": FILE_NAME = args.filename
 
     if args.oled:
+        print(args.oled)
         # ------- TRANSFER: parametry pomiaru
         FName = FILE_NAME
-        VDS = args.oled[0][0]
-        VGS_start = args.oled[0][1]
-        VGS_stop = args.oled[0][2]
-        VGS_step = args.oled[0][3]
+        VGS_start = args.oled[0][0]
+        VGS_stop = args.oled[0][1]
+        VGS_step = args.oled[0][2]
         VDS_comp = args.DCOMP
         VGS_comp = args.GCOMP
         NPLC = args.NPLC
@@ -43,7 +44,7 @@ if __name__ == '__main__':
         DEL = args.DEL
         SWEEP = True
 
-        param_transfer = [FName, VDS, VGS_start, VGS_stop, VGS_step, VDS_comp, VGS_comp, NPLC, DEL, SWEEP]
+        param_transfer = [FName,VGS_start, VGS_stop, VGS_step, VDS_comp, VGS_comp, NPLC, DEL, SWEEP]
         keithley.oled(*param_transfer)
 
     if args.trans:
