@@ -233,7 +233,6 @@ class k2636b():
                     dp = np.array([float(txt.split()[0]), float(txt.split()[1]), float(llux)])
                     self.pl.plot(dp)
 
-
                 if self.TAGS_Header in txt: txt += " \t " + str("lux") + " \t " + str("CurrCoeff.")
                 else:
                     CurrCoeff = 0.01*(float(llux) / float(txt.split()[1] ))
