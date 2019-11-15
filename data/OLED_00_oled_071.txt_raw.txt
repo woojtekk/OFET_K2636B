@@ -1,0 +1,2 @@
+1.52500e+01	9.18930e-05 	 0 	 0E+00 	 2.042067E+01 	 0E+00
+DATA: /home/user/PycharmProjects/OFET_K2636B_2019.10.15/data/OLED_00_oled_071.txt

@@ -6,6 +6,7 @@
 
 function f_time(vds, vgs, tstep, tlong)
     print(">>head<< #dt IDS  IGS  VDS  VGS")
+
 	smua.source.levelv = vds
 	smub.source.levelv = vgs
 	timer.reset()

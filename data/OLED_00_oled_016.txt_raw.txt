@@ -1,0 +1,2 @@
+>>head<<V(__) 	 I(__) 	 lux 	 CurrCoeff. 	 CurrA/m^-2. 	 lux/m^-1
+DATA: /home/user/PycharmProjects/OFET_K2636B_2019.10.15/data/OLED_00_oled_016.txt

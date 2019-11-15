@@ -1,0 +1,3 @@
+>>head<<dt(__) 	 I(__) 	 lux 	 CurrCoeff. 	 CurrA/m^-2. 	 lux/m^-2 	 %lux/m^-2
+4.50000e-05	3.33232e-03 	 142.6 	 4.279301E+02 	 7.405156E+02	3.168889E+07	100.0
+DATA: /home/user/PycharmProjects/OFET_K2636B_2019.10.15/data/OLED_00_oled_ltp_030.txt

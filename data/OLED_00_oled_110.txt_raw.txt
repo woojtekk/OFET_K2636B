@@ -1,0 +1,3 @@
+>>head<<V(__) 	 I(__) 	 lux 	 CurrC oeff. 	 CurrA/m^-2. 	 lux/m^-1
+2.50000e-01	-1.64485e-13 	 0 	 -0E+00 	 -3.655222E-08 	 0E+00
+DATA: /home/user/PycharmProjects/OFET_K2636B_2019.10.15/data/OLED_00_oled_110.txt
