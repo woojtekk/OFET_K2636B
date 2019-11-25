@@ -19,12 +19,10 @@ import matplotlib.pyplot as plt
 from confpar import config_import
 
 
-
 FILE_NAME = "OLED_TEST"
 DEV_ADDRESS = 'ASRL/dev/ttyUSB0::INSTR'
 LUX_ADDRESS = "/dev/ttyACM0"
 OLEDarea = 4.5e-6
-DataFileName="OLED_Test"
 
 class luxmeter():
     """
@@ -44,6 +42,10 @@ class luxmeter():
         except serial.serialutil.SerialException:
             print("INIT Luxmeter ....  Device not connected.",)
             self.NoLUX = True
+
+    def __call__(self, *args, **kwargs):
+        print("===========================")
+        return self.NoLUX
 
     def Lux_Get(self):
         if self.NoLUX: return 0
@@ -80,8 +82,8 @@ class OLED_Plot_ProcessPlotter(object):
         self.y2label = "Luminance [lum]"
         self.title   = fname
         self.xscale  = "lin"
-        self.y1scale = "lin"#"log"
-        self.y2scale = "lin"#"log"
+        self.y1scale = "log"#"log"
+        self.y2scale = "log"#"log"
         self.type    = "typ"
         self.y1style   = "ro" # "k",
         self.y2style   = "ro" # "k"
@@ -152,6 +154,7 @@ class k2636b():
     if_verbose     = True
     if_plot_figure = True
     if_abort       = False
+    a = []
 
     TAGS_Header    = ">>head<<"
     TAGS_END       = ">>END<<"
@@ -198,7 +201,6 @@ class k2636b():
             """
             self.inst = usbtmc.Instrument(0x05e6, 0x2636,timeout=10)
             self.inst.write("*CLS")
-            # print(self.kread())
         except usbtmc.usbtmc.UsbtmcException:
             print('Cannot open Device Port.')
             sys.exit()
@@ -233,9 +235,8 @@ class k2636b():
 
     def kwrun(self,cmd):
         self.kwrite(cmd)
-        # time.sleep(0.5)
         self.kwrite('mm.run()')
-        return self.kread()
+        return 0
 
     def set_V(self,V):
         self.kwrite(str('Vg='+str(V)))
@@ -288,18 +289,16 @@ class k2636b():
             print('ERROR: Could not load tsp script.')
             raise SystemExit
 
-    def runTSP_oled(self, fn="test"):
+    def runTSP_oled(self, fn="test",param=0):
         """ process all incoming data from K2636B   """
         try:
             if self.if_plot_figure:
                 self.pl = OLED_Plot(fn)
                 time.sleep(1)
 
-            a  = []
-
-            Vstep  = 0.1
-            Vstart = 0
-            Vstop  = 1
+            Vstep  = float(param["V_Step"])
+            Vstart = float(param["V_Start"])
+            Vstop  = float(param["V_Stop"])
             V      = Vstart
             RRUN=True
 
@@ -310,138 +309,116 @@ class k2636b():
                 V_todo.append(Vstop)
                 for x in pts: V_todo.append(round(V_todo[len(pts) + x] - float(Vstep), 4))
 
-            first=True
+            self.kwrite('script.anonymous.run()')
+            self.ProcessIncommingData()
+
             for V in V_todo:
-            # while RRUN:
-                if first:
-                    self.kwrite('script.anonymous.run()')
-                    InComingData = self.kread()
-                    first=False
-                else:
-                    InComingData = self.kwrun(str('Vg='+str(V)))
-                    InComminLuxx = self.lux.Lux_Get()
-
-                if self.TAGS_END in InComingData: break
-                if self.if_abort : break
-
-                if self.if_plot_figure and (not self.TAGS_Header in InComingData ) :
-                    dp = np.array([abs(float(InComingData.split()[0])),\
-                                   abs(float(InComingData.split()[1])),\
-                                   abs(float(InComminLuxx))])
-                    self.pl.plot(dp)
-
-                if self.TAGS_Header in InComingData:
-                    InComingData += " \t " + str("lux")         + \
-                                    " \t " + str("CurrC oeff.") + \
-                                    " \t " + str("CurrA/m^-2.") + \
-                                    " \t " + str("lux/m^-1")
-                else:
-                    CurrM2    = float(InComingData.split()[1])/OLEDarea
-                    LummM2    = float(InComminLuxx) / OLEDarea
-                    CurrCoeff = ((float(InComminLuxx) / float(InComingData.split()[1])))
-
-                    CurrM2    = self.format(CurrM2)
-                    LummM2    = self.format(LummM2)
-                    CurrCoeff = self.format(CurrCoeff)
-
-                    InComingData += " \t " + str(InComminLuxx) + \
-                                    " \t " + str(CurrCoeff)    + \
-                                    " \t " + str(CurrM2)       + \
-                                    " \t " + str(LummM2)
-
-                self.DataSave(InComingData)
-                a.append(InComingData.replace(self.TAGS_Header, "").split())
+                self.kwrun(str('Vg='+str(V)))
+                self.ProcessIncommingData()
 
             self.kwrite('exit.run()')
-
-            dd = pd.DataFrame(a)                            # a array is converted to the DataFrame
-            df = pd.DataFrame()                             # new empty Data Frame is created
-            df = pd.concat([df, dd], axis=1, sort=False)    # i donth ahve any idea why but it works
-            self.DataSave(df)                               # save final data file
-            self.DataSave("DATA: " +str(fn))                # and at the end add data file to the raw file
-
-            if self.if_plot_figure:
-                self.pl.plot(finished=True)
-                cv2.destroyAllWindows()
-            if self.if_abort : self.abort()
+            self.ProcessIncommingData()
 
         except AttributeError:
             print('ERROR: Some ERROR in runTSP function')
             raise SystemExit
 
-    def runTSP_oled_LTP(self, fn="test",lpp=50):
-        """ process all incoming data form K2636B   """
+    def runTSP_oled_LTP(self, fn="test",param=0):
+        """ process all incoming data from K2636B   """
         try:
+            self.if_verbose = False
+
             if self.if_plot_figure:
                 self.pl = OLED_Plot(fn)
                 time.sleep(1)
 
+            if self.lux.NoLUX :
+                print('ERROR: NO LuxMeter connected \n***************************')
+                raise SystemExit
+
+            V   = float(param["V"])
+            LTP = float(param["LTPercent"])
             self.kwrite('script.anonymous.run()')
+            self.ProcessIncommingData()
 
-            a  = []
-            LuxTh=-1
-            while True:
-                InComingData = self.kread()
-                InComminLuxx = self.lux.Lux_Get()
+            self.kwrun(str('Vg=' + str(V)))
+            V0,I0,L0=self.ProcessIncommingData()
 
-                if self.TAGS_END in InComingData: break
+            CLTP=100
 
-                if LuxTh < 0  and (not self.TAGS_Header in InComingData ) :
-                    InComminLuxx = self.lux.Lux_Get()
-                    LuxTh = float(InComminLuxx)
-
-                if self.if_plot_figure and (not self.TAGS_Header in InComingData ) :
-                    dp = np.array([float(InComingData.split()[0]),\
-                                   float(InComingData.split()[1]),\
-                                   float(InComminLuxx)])
-                    self.pl.plot(dp)
-
-                if self.TAGS_Header in InComingData:
-                    InComingData += " \t " + str("lux"        ) + " \t "\
-                                           + str("CurrCoeff." ) + " \t "\
-                                           + str("CurrA/m^-2.") + " \t "\
-                                           + str("lux/m^-2"   ) + " \t "\
-                                           + str("%lux/m^-2"   )
-                else:
-                    CurrM2    = float(InComingData.split()[1])/OLEDarea
-                    LummM2    = float(InComminLuxx) / OLEDarea
-                    CurrCoeff = ((float(InComminLuxx) / float(InComingData.split()[1])))
-                    # llux      = 100*float(InComminLuxx)/LuxTh
-                    # llux=round(llux,3)
-                    # # if llux < lpp:
-                    #     self.abort()
-                    #     break
-                    CurrM2    = self.format(CurrM2)
-                    LummM2    = self.format(LummM2)
-                    CurrCoeff = self.format(CurrCoeff)
-                    llux      = self.format(llux)
-
-                    InComingData += " \t " + str(InComminLuxx) + \
-                                    " \t " + str(CurrCoeff)    + \
-                                    " \t " + str(CurrM2)       + \
-                                    " \t " + str(LummM2)       + \
-                                    " \t " + str(llux)
-
-                self.DataSave(InComingData)
-
-                InComingData = InComingData.replace(self.TAGS_Header, "")
-                a.append(InComingData.split())
+            tstart=time.time()
+            while CLTP >= LTP:
+                self.kwrun("")
+                V,I,L=self.ProcessIncommingData()
+                CLTP = float(float(L)*100/float(L0))
+                print("::: CLTP: =",round(CLTP,2),"% [",LTP,"] time:",round(time.time()-tstart,2),"s.")
                 if self.if_abort: break
 
-            dd = pd.DataFrame(a)                            # a array is converted to the DataFrame
-            df = pd.DataFrame()                             # new empty Data Frame is created
-            df = pd.concat([df, dd], axis=1, sort=False)    # i donth ahve any idea why but it works
-            self.DataSave(df)                               # save final data file
-            self.DataSave("DATA: " +str(fn))                # and at the end add data file to the raw file
+            self.kwrite('exit.run()')
+            self.ProcessIncommingData()
 
-            if self.if_plot_figure:
-                self.pl.plot(finished=True)
-                cv2.destroyAllWindows()
-            if self.if_abort : self.abort()
+            if self.if_abort: self.abort()
+
 
         except AttributeError:
             print('ERROR: Some ERROR in runTSP function')
             raise SystemExit
+
+
+    def ProcessIncommingData(self):
+        """ read data form device, process them and save to the files. """
+        try:
+            InComingData = self.kread()
+            InComminLuxx = self.lux.Lux_Get()
+            if self.if_plot_figure and (not self.TAGS_Header in InComingData ) and (not self.TAGS_END in InComingData) :
+                dp = np.array([abs(float(InComingData.split()[0])),\
+                               abs(float(InComingData.split()[1])),\
+                               abs(float(InComminLuxx))])
+                self.pl.plot(dp)
+
+            if self.TAGS_Header in InComingData:
+                InComingData += " \t " + str("lux")         + \
+                                " \t " + str("CurrCoeff.") + \
+                                " \t " + str("CurrA/m^-2.") + \
+                                " \t " + str("lux/m^-1")
+            elif not self.TAGS_END in InComingData:
+                CurrM2    = float(InComingData.split()[1])/OLEDarea
+                LummM2    = float(InComminLuxx) / OLEDarea
+                CurrCoeff = ((float(InComingData.split()[1]))/float(InComminLuxx) )
+
+                CurrM2    = self.format(CurrM2)
+                LummM2    = self.format(LummM2)
+                CurrCoeff = self.format(CurrCoeff)
+
+                InComingData += " \t " + str(InComminLuxx) + \
+                                " \t " + str(CurrCoeff)    + \
+                                " \t " + str(CurrM2)       + \
+                                " \t " + str(LummM2)
+
+            self.DataSave(InComingData)
+            self.a.append(InComingData.replace(self.TAGS_Header, "").replace(self.TAGS_END, "").split())
+
+            if self.TAGS_END in InComingData:
+                dd = pd.DataFrame(self.a)                       # a array is converted to the DataFrame
+                df = pd.DataFrame()                             # new empty Data Frame is created
+                df = pd.concat([df, dd], axis=1, sort=False)    # i donth ahve any idea why but it works
+                self.DataSave(df)                               # save final data file
+                self.DataSave("DATA: " +str(self.DataFileName)) # and at the end add data file to the raw file
+
+                if self.if_plot_figure:
+                    self.pl.plot(finished=True)
+                    cv2.destroyAllWindows()
+
+            if not self.TAGS_END in InComingData:
+                return InComingData.split()[0], InComingData.split()[1], InComminLuxx
+
+
+
+        except AttributeError:
+            print('ERROR: Some ERROR in proccesing function')
+            raise SystemExit
+
+
 
     def oled(self, param):
         """K2636 Transfer sweeps."""
@@ -458,7 +435,7 @@ class k2636b():
 
             self.loadTSP('k2636b_oled_sweep_init.tsp', param_tsp)
 
-            self.runTSP_oled(file_name)
+            self.runTSP_oled(file_name,param)
             # self.stats(file_name)
 
             time_end = time.time()
@@ -468,25 +445,21 @@ class k2636b():
         except(AttributeError):
             print('Cannot perform output sweep: no keithley connected. Problem in oled subrutine.')
 
-    def oled_ltp(self, *param):
+    def oled_ltp(self, param):
         try:
             print("++++++++++++++++++++++++++++++++++++++ OLED LIFE TIME TEST")
             begin_time = time.time()
 
-            cmd =   "OLED_V  = " + str(float(param[1])) + "\n" \
-                    "OLED_dT = " + str(float(param[2])) + "\n" \
-                    "DELATE  = " + str(float(param[4])) + "\n" \
-                    "NPLC    = " + str(float(param[5])) + "\n" \
-                    "BLIMIT_V    = 15    \n" \
-                    "BLIMIT_I    = 100e-3 \n" \
-                    "BALIMIT_R   = 10e-3 \n"
+            param_tsp=""
+            for i in param.keys():
+                param_tsp+=str(i)+" = "+str(param[i])+" \n"
 
-            file_name = str(str(param[0]) + '_oled_ltp.txt')
+            file_name = str(str(param["FName"]) + '_oled_ltp.txt')
             file_name = self.check_file_name(file_name)
 
-            self.loadTSP('k2636b_oled_ltp.tsp', cmd)
+            self.loadTSP('k2636b_oled_sweep_init.tsp', param_tsp)
 
-            self.runTSP_oled_LTP(file_name,float(param[3]))
+            self.runTSP_oled_LTP(file_name,param)
             # self.stats(file_name)
 
             finish_time = time.time()
@@ -495,7 +468,6 @@ class k2636b():
 
         except(AttributeError):
             print('Cannot perform output sweep: no keithley connected.')
-
 
 # ================================================================
 # ============================= MAIN =============================
@@ -544,11 +516,20 @@ if __name__ == '__main__':
         oled_param["SWEEP"]   = args.sweep
 
         keithley.oled(oled_param)
-    #
-    # elif args.ltp:
-    #     param_ltp=[FILE_NAME ,args.ltp[0][0],args.ltp[0][1],args.ltp[0][2],args.DEL,args.NPLC]
-    #     print("LTP",param_ltp)
-    #     keithley.oled_ltp(*param_ltp)
+
+    elif args.ltp:
+        oled_param["FName"]     = FILE_NAME
+        oled_param["V"]         = args.ltp[0][0]
+        oled_param["Time_step"] = args.ltp[0][1]
+        oled_param["LTPercent"] = args.ltp[0][2]
+        oled_param["NPLC"]      = args.NPLC
+        oled_param["COMP"]      = args.DCOMP
+        # oled_param["DELATE"]  = args.DEL
+        oled_param["SWEEP"]     = args.sweep
+
+        #param_ltp=[FILE_NAME ,args.ltp[0][0],args.ltp[0][1],args.ltp[0][2],args.DEL,args.NPLC]
+
+        keithley.oled_ltp(oled_param)
 
     else:
         keithley.info()

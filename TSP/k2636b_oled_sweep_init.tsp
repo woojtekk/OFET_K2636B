@@ -7,9 +7,9 @@
     smub.source.limitv       = LIMIT_V
     smub.source.func         = smub.OUTPUT_DCVOLTS
     display.smub.measure.func = display.MEASURE_DCAMPS
-    smub.measure.count        = 1
-    smub.measure.delay        = 1
-    smub.measure.delayfactor  = 1
+    --smub.measure.count        = 1
+    --smub.measure.delay        = 0.5
+    smub.measure.delayfactor  = 0.5
     smub.measure.nplc         = NPLC
     smub.measure.autozero     = smub.AUTOZERO_AUTO
 
@@ -21,9 +21,9 @@ endscript
 -------- END --------
 
 
-loadscript mmd
+loadscript mm
 		smub.source.levelv = Vg
-		--beeper.beep(0.1, 2000)
+		beeper.beep(0.1, 2000)
 		print(Vg, (smub.measure.i()))
 
 endscript
@@ -37,6 +37,7 @@ loadscript exit
     reset()
     smua.reset()
     smub.reset()
+    print(">>END<<")
 
 
 
